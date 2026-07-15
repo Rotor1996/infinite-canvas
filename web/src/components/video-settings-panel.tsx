@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { Switch } from "antd";
 
 import { ImageSettingsTheme } from "@/components/image-settings-panel";
-import { grokVideoDurationOptions, grokVideoRatioOptions, grokVideoResolutionOptions, isGrokVideo15Model, isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoResolution } from "@/lib/grok-video";
+import { grokVideoDurationOptions, grokVideoRatioOptions, grokVideoReferenceModeOptions, grokVideoResolutionOptions, isGrokVideo15Model, isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoReferenceMode, normalizeGrokVideoResolution } from "@/lib/grok-video";
 import { boolConfig, isSeedanceFastModel, isSeedanceVideoConfig, normalizeSeedanceDuration, normalizeSeedanceRatio, normalizeSeedanceResolution, seedanceDurationOptions, seedancePixelLabel, seedanceRatioOptions, seedanceResolutionOptions } from "@/lib/seedance-video";
 import { type CanvasTheme } from "@/lib/canvas-theme";
 import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
@@ -29,7 +29,7 @@ export const videoSecondOptions = secondOptions.map((value) => String(value));
 
 type VideoSettingsPanelProps = {
     config: AiConfig;
-    onConfigChange: (key: "vquality" | "size" | "videoSeconds" | "videoGenerateAudio" | "videoWatermark", value: string) => void;
+    onConfigChange: (key: "vquality" | "size" | "videoSeconds" | "videoReferenceMode" | "videoGenerateAudio" | "videoWatermark", value: string) => void;
     theme: CanvasTheme;
     showTitle?: boolean;
     className?: string;
@@ -113,11 +113,22 @@ function GrokVideoSettingsPanel({ config, onConfigChange, theme, showTitle, clas
     const resolution = normalizeGrokVideoResolution(config.vquality);
     const ratio = normalizeGrokVideoRatio(config.size);
     const duration = normalizeGrokVideoDuration(config.videoSeconds);
+    const referenceMode = normalizeGrokVideoReferenceMode(config.videoReferenceMode);
 
     return (
         <ImageSettingsTheme theme={theme}>
             <div className={className} style={{ color: theme.node.text }} onMouseDown={(event) => event.stopPropagation()}>
                 {showTitle ? <div className="text-lg font-semibold">视频设置</div> : null}
+                <SettingGroup title="参考视频模式" color={theme.node.muted}>
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {grokVideoReferenceModeOptions.map((value) => (
+                            <OptionPill key={value} selected={referenceMode === value} theme={theme} onClick={() => onConfigChange("videoReferenceMode", value)}>
+                                {value === "extend" ? "延展" : "编辑"}
+                            </OptionPill>
+                        ))}
+                    </div>
+                    <div className="text-[11px] leading-4 opacity-55">仅连接参考视频时生效。编辑沿用原视频规格；延展使用当前时长。</div>
+                </SettingGroup>
                 <SettingGroup title="分辨率" color={theme.node.muted}>
                     <div className="grid grid-cols-3 gap-2.5">
                         {grokVideoResolutionOptions.map((value) => (

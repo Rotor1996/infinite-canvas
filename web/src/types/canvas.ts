@@ -36,6 +36,7 @@ export type CanvasNodeMetadata = {
     quality?: string;
     count?: number;
     seconds?: string;
+    videoReferenceMode?: "edit" | "extend";
     vquality?: string;
     generateAudio?: string;
     watermark?: string;

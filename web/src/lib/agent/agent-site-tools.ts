@@ -4,7 +4,7 @@ import { fetchPrompts } from "@/services/api/prompts";
 import { uploadImage } from "@/services/image-storage";
 import { imageAspectOptions, imageQualityOptions } from "@/components/image-settings-panel";
 import { videoResolutionOptions, videoSecondOptions, videoSizeOptions } from "@/components/video-settings-panel";
-import { grokVideoDurationOptions, grokVideoRatioOptions, grokVideoResolutionOptions, isGrokVideoModel, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoResolution } from "@/lib/grok-video";
+import { grokVideoDurationOptions, grokVideoRatioOptions, grokVideoResolutionOptions, isGrokVideoModel, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoReferenceMode, normalizeGrokVideoResolution } from "@/lib/grok-video";
 import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useAssetStore } from "@/stores/use-asset-store";
 import { modelOptionLabel, modelOptionName, normalizeModelOptionValue, useConfigStore } from "@/stores/use-config-store";
@@ -134,6 +134,7 @@ function getVideoConfig() {
             modelName,
             size: grok ? normalizeGrokVideoRatio(config.size) : config.size || "1280x720",
             seconds: grok ? String(normalizeGrokVideoDuration(config.videoSeconds)) : config.videoSeconds || "6",
+            referenceMode: normalizeGrokVideoReferenceMode(config.videoReferenceMode),
             resolution: grok ? normalizeGrokVideoResolution(config.vquality) : config.vquality || "720",
             generateAudio: config.videoGenerateAudio !== "false",
             watermark: config.videoWatermark === "true",
@@ -160,6 +161,10 @@ function runVideoWorkbench(input: SiteToolInput, navigate: NavigateFunction) {
     if (typeof input.seconds === "string" && input.seconds.trim()) {
         configStore.updateConfig("videoSeconds", input.seconds);
         applied.seconds = input.seconds;
+    }
+    if (input.referenceMode === "edit" || input.referenceMode === "extend") {
+        configStore.updateConfig("videoReferenceMode", input.referenceMode);
+        applied.referenceMode = input.referenceMode;
     }
     if (typeof input.resolution === "string" && input.resolution.trim()) {
         configStore.updateConfig("vquality", input.resolution);

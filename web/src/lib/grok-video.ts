@@ -3,6 +3,7 @@ import { modelOptionName, resolveModelRequestConfig, type AiConfig } from "@/sto
 export const grokVideoResolutionOptions = ["480p", "720p", "1080p"] as const;
 export const grokVideoRatioOptions = ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3"] as const;
 export const grokVideoDurationOptions = [5, 8, 10, 12, 15] as const;
+export const grokVideoReferenceModeOptions = ["edit", "extend"] as const;
 
 export function isGrokVideoConfig(config: AiConfig | Pick<AiConfig, "model" | "videoModel" | "apiFormat">) {
     const requestConfig = "channels" in config ? resolveModelRequestConfig(config, config.model || config.videoModel) : config;
@@ -38,6 +39,10 @@ export function normalizeGrokVideoRatio(value: string) {
     if (!width || !height) return "16:9";
     const ratio = width / height;
     return grokVideoRatioOptions.reduce<string>((best, item) => (Math.abs(readRatio(item) - ratio) < Math.abs(readRatio(best) - ratio) ? item : best), grokVideoRatioOptions[0]);
+}
+
+export function normalizeGrokVideoReferenceMode(value: string | undefined) {
+    return value === "extend" ? "extend" : "edit";
 }
 
 function readRatio(value: string) {

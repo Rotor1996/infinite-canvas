@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { dataUrlToFile } from "@/lib/image-utils";
-import { isGrokVideo15Model, isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoResolution } from "@/lib/grok-video";
+import { isGrokVideo15Model, isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoReferenceMode, normalizeGrokVideoResolution } from "@/lib/grok-video";
 import { getMediaBlob, uploadMediaFile, type UploadedFile } from "@/services/file-storage";
 import { imageToDataUrl } from "@/services/image-storage";
 import { boolConfig, buildSeedancePromptText, isSeedanceVideoConfig, normalizeSeedanceDuration, normalizeSeedanceRatio, normalizeSeedanceResolution, seedanceVideoReferenceError, SEEDANCE_REFERENCE_LIMITS } from "@/lib/seedance-video";
@@ -66,11 +66,12 @@ export async function createVideoGenerationTask(config: AiConfig, prompt: string
     if (isSeedanceVideoConfig(requestConfig)) {
         return createSeedanceTask(requestConfig, selectedModel, prompt, references, videoReferences, audioReferences, options);
     }
+    if (isGrokVideoConfig(requestConfig)) {
+        if (audioReferences.length) throw new Error("Grok 视频接口暂不支持参考音频，请切换到 Seedance 2.0 / 火山 Agent Plan 模型，或移除参考音频");
+        return createGrokVideoTask(requestConfig, selectedModel, prompt, references, videoReferences, options);
+    }
     if (videoReferences.length || audioReferences.length) {
         throw new Error("当前视频接口不支持参考视频或参考音频，请切换到 Seedance 2.0 / 火山 Agent Plan 模型，或移除参考素材");
-    }
-    if (isGrokVideoConfig(requestConfig)) {
-        return createGrokVideoTask(requestConfig, selectedModel, prompt, references, options);
     }
     return createOpenAIVideoTask(requestConfig, selectedModel, prompt, references, options);
 }
@@ -131,8 +132,9 @@ async function pollOpenAIVideoTask(config: AiConfig, task: VideoGenerationTask, 
     }
 }
 
-async function createGrokVideoTask(config: AiConfig, model: string, prompt: string, references: ReferenceImage[], options?: RequestOptions): Promise<VideoGenerationTask> {
+async function createGrokVideoTask(config: AiConfig, model: string, prompt: string, references: ReferenceImage[], videoReferences: ReferenceVideo[], options?: RequestOptions): Promise<VideoGenerationTask> {
     const modelName = modelOptionName(model);
+    if (videoReferences.length) return createGrokVideoReferenceTask(config, modelName, prompt, references, videoReferences, model, options);
     const duration = normalizeGrokVideoDuration(config.videoSeconds);
     const resolution = normalizeGrokVideoResolution(config.vquality);
     if (references.length > 1 && isGrokVideo15Model(modelName)) throw new Error("Grok Imagine Video 1.5 不支持多图参考，请只保留一张首帧图片");
@@ -157,6 +159,29 @@ async function createGrokVideoTask(config: AiConfig, model: string, prompt: stri
         return { id: taskId, provider: "grok", model };
     } catch (error) {
         throw new Error(readAxiosError(error, "Grok 视频任务创建失败"));
+    }
+}
+
+async function createGrokVideoReferenceTask(config: AiConfig, modelName: string, prompt: string, references: ReferenceImage[], videoReferences: ReferenceVideo[], model: string, options?: RequestOptions): Promise<VideoGenerationTask> {
+    if (references.length) throw new Error("Grok 参考视频模式不能同时使用参考图，请只保留视频输入");
+    if (videoReferences.length > 1) throw new Error("Grok 视频编辑/延展一次只支持 1 个参考视频，请只保留一个视频输入");
+    const mode = normalizeGrokVideoReferenceMode(config.videoReferenceMode);
+    const videoUrl = await resolveGrokVideoUrl(videoReferences[0]);
+    const payload: Record<string, unknown> = {
+        model: modelName,
+        prompt,
+        video: { url: videoUrl },
+    };
+    const endpoint = mode === "extend" ? "/videos/extensions" : "/videos/edits";
+    if (mode === "extend") payload.duration = normalizeGrokVideoDuration(config.videoSeconds);
+
+    try {
+        const created = unwrapEnvelope((await axios.post<ApiEnvelope<GrokVideoTask>>(aiApiUrl(config, endpoint), payload, { headers: aiHeaders(config, "application/json"), signal: options?.signal })).data, "Grok 视频接口没有返回任务");
+        const taskId = created.request_id || created.id;
+        if (!taskId) throw new Error("Grok 视频接口没有返回 request_id");
+        return { id: taskId, provider: "grok", model };
+    } catch (error) {
+        throw new Error(readAxiosError(error, mode === "extend" ? "Grok 视频延展任务创建失败" : "Grok 视频编辑任务创建失败"));
     }
 }
 
@@ -269,6 +294,15 @@ async function resolveGrokImageUrl(image: ReferenceImage) {
     const dataUrl = await imageToDataUrl(image);
     if (!dataUrl) throw new Error("Grok 参考图读取失败，请换一张图片或重新上传");
     return dataUrl;
+}
+
+async function resolveGrokVideoUrl(video: ReferenceVideo) {
+    if (isPublicMediaUrl(video.url)) return video.url;
+    let blob: Blob | null = null;
+    if (video.storageKey) blob = await getMediaBlob(video.storageKey);
+    if (!blob && video.url?.startsWith("blob:")) blob = await (await fetch(video.url)).blob();
+    if (!blob) throw new Error("Grok 参考视频读取失败，请使用公网 URL，或重新上传本地已保存的视频");
+    return blobToDataUrl(blob);
 }
 
 async function resolveSeedanceVideoUrl(video: ReferenceVideo) {
