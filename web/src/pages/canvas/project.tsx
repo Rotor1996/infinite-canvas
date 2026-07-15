@@ -3231,6 +3231,7 @@ function buildGenerationConfig(config: AiConfig, node: CanvasNodeData | undefine
         quality: node?.metadata?.quality || config.quality || defaultConfig.quality,
         size: node?.metadata?.size || config.size || defaultConfig.size,
         videoSeconds: node?.metadata?.seconds || config.videoSeconds || defaultConfig.videoSeconds,
+        videoReferenceMode: node?.metadata?.videoReferenceMode || config.videoReferenceMode || defaultConfig.videoReferenceMode,
         vquality: node?.metadata?.vquality || config.vquality || defaultConfig.vquality,
         videoGenerateAudio: node?.metadata?.generateAudio || config.videoGenerateAudio || defaultConfig.videoGenerateAudio,
         videoWatermark: node?.metadata?.watermark || config.videoWatermark || defaultConfig.videoWatermark,
