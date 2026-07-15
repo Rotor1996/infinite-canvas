@@ -4,6 +4,7 @@ import { fetchPrompts } from "@/services/api/prompts";
 import { uploadImage } from "@/services/image-storage";
 import { imageAspectOptions, imageQualityOptions } from "@/components/image-settings-panel";
 import { videoResolutionOptions, videoSecondOptions, videoSizeOptions } from "@/components/video-settings-panel";
+import { grokVideoDurationOptions, grokVideoRatioOptions, grokVideoResolutionOptions, isGrokVideoModel, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoResolution } from "@/lib/grok-video";
 import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useAssetStore } from "@/stores/use-asset-store";
 import { modelOptionLabel, modelOptionName, normalizeModelOptionValue, useConfigStore } from "@/stores/use-config-store";
@@ -125,20 +126,22 @@ function runImageWorkbench(input: SiteToolInput, navigate: NavigateFunction) {
 function getVideoConfig() {
     const { config } = useConfigStore.getState();
     const model = config.videoModel || config.model;
+    const modelName = modelOptionName(model);
+    const grok = isGrokVideoModel(modelName);
     return {
         current: {
             model,
-            modelName: modelOptionName(model),
-            size: config.size || "1280x720",
-            seconds: config.videoSeconds || "6",
-            resolution: config.vquality || "720",
+            modelName,
+            size: grok ? normalizeGrokVideoRatio(config.size) : config.size || "1280x720",
+            seconds: grok ? String(normalizeGrokVideoDuration(config.videoSeconds)) : config.videoSeconds || "6",
+            resolution: grok ? normalizeGrokVideoResolution(config.vquality) : config.vquality || "720",
             generateAudio: config.videoGenerateAudio !== "false",
             watermark: config.videoWatermark === "true",
         },
         models: config.videoModels.map((value) => ({ value, label: modelOptionLabel(config, value) })),
-        sizeOptions: videoSizeOptions,
-        secondsOptions: videoSecondOptions,
-        resolutionOptions: videoResolutionOptions,
+        sizeOptions: grok ? grokVideoRatioOptions.map((value) => ({ value, label: value })) : videoSizeOptions,
+        secondsOptions: grok ? grokVideoDurationOptions.map(String) : videoSecondOptions,
+        resolutionOptions: grok ? grokVideoResolutionOptions.map((value) => ({ value, label: value })) : videoResolutionOptions,
     };
 }
 

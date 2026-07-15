@@ -2,6 +2,8 @@
 
 ## Unreleased
 
++ [新增] 视频生成支持通过 Sub2API / xAI 的 Grok 异步视频协议创建和轮询任务，并适配 Grok 比例、分辨率、时长及图片输入。
+
 ## v0.7.1 - 2026-07-15
 
 + [修复] 修复通过 `crypto.randomUUID` 不可用导致页面白屏报错的问题，改用 nanoid 生成 id。
