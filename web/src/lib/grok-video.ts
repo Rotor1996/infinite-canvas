@@ -4,9 +4,9 @@ export const grokVideoResolutionOptions = ["480p", "720p", "1080p"] as const;
 export const grokVideoRatioOptions = ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3"] as const;
 export const grokVideoDurationOptions = [5, 8, 10, 12, 15] as const;
 
-export function isGrokVideoConfig(config: AiConfig | Pick<AiConfig, "model" | "videoModel">) {
+export function isGrokVideoConfig(config: AiConfig | Pick<AiConfig, "model" | "videoModel" | "apiFormat">) {
     const requestConfig = "channels" in config ? resolveModelRequestConfig(config, config.model || config.videoModel) : config;
-    return isGrokVideoModel(modelOptionName(requestConfig.model || requestConfig.videoModel));
+    return requestConfig.apiFormat === "grok" || isGrokVideoModel(modelOptionName(requestConfig.model || requestConfig.videoModel));
 }
 
 export function isGrokVideoModel(model: string) {

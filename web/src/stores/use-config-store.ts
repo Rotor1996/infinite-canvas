@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 
-export type ApiCallFormat = "openai" | "gemini";
+export type ApiCallFormat = "openai" | "grok" | "gemini";
 
 export type ModelChannel = {
     id: string;
@@ -80,7 +80,7 @@ export const defaultConfig: AiConfig = {
             name: "Grok / xAI",
             baseUrl: XAI_BASE_URL,
             apiKey: "",
-            apiFormat: "openai",
+            apiFormat: "grok",
             models: ["grok-imagine-video"],
         },
     ],
@@ -363,11 +363,14 @@ function normalizeChannels(config: AiConfig) {
 }
 
 export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {
-    return apiFormat === "gemini" ? GEMINI_BASE_URL : OPENAI_BASE_URL;
+    if (apiFormat === "gemini") return GEMINI_BASE_URL;
+    if (apiFormat === "grok") return XAI_BASE_URL;
+    return OPENAI_BASE_URL;
 }
 
 function normalizeApiFormat(apiFormat: unknown): ApiCallFormat {
-    return apiFormat === "gemini" ? "gemini" : "openai";
+    if (apiFormat === "gemini" || apiFormat === "grok") return apiFormat;
+    return "openai";
 }
 
 function uniqueRawModels(models: string[]) {
