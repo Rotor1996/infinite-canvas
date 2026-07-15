@@ -58,6 +58,7 @@ export const CONFIG_STORE_KEY = "infinite-canvas:ai_config_store";
 export type ModelCapability = "image" | "video" | "text" | "audio";
 const CHANNEL_MODEL_SEPARATOR = "::";
 const OPENAI_BASE_URL = "https://api.openai.com";
+const XAI_BASE_URL = "https://api.x.ai";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 export const defaultConfig: AiConfig = {
@@ -67,19 +68,27 @@ export const defaultConfig: AiConfig = {
     apiFormat: "openai",
     channels: [
         {
-            id: "default",
-            name: "默认渠道",
+            id: "openai",
+            name: "OpenAI",
             baseUrl: OPENAI_BASE_URL,
             apiKey: "",
             apiFormat: "openai",
-            models: ["gpt-image-2", "grok-imagine-video", "gpt-5.5", "gpt-4o-mini-tts"],
+            models: ["gpt-image-2", "gpt-5.5", "gpt-4o-mini-tts"],
+        },
+        {
+            id: "grok",
+            name: "Grok / xAI",
+            baseUrl: XAI_BASE_URL,
+            apiKey: "",
+            apiFormat: "openai",
+            models: ["grok-imagine-video"],
         },
     ],
-    model: "default::gpt-image-2",
-    imageModel: "default::gpt-image-2",
-    videoModel: "default::grok-imagine-video",
-    textModel: "default::gpt-5.5",
-    audioModel: "default::gpt-4o-mini-tts",
+    model: "openai::gpt-image-2",
+    imageModel: "openai::gpt-image-2",
+    videoModel: "grok::grok-imagine-video",
+    textModel: "openai::gpt-5.5",
+    audioModel: "openai::gpt-4o-mini-tts",
     audioVoice: "alloy",
     audioFormat: "mp3",
     audioSpeed: "1",
@@ -89,11 +98,11 @@ export const defaultConfig: AiConfig = {
     videoGenerateAudio: "true",
     videoWatermark: "false",
     systemPrompt: "",
-    models: ["default::gpt-image-2", "default::grok-imagine-video", "default::gpt-5.5", "default::gpt-4o-mini-tts"],
-    imageModels: ["default::gpt-image-2"],
-    videoModels: ["default::grok-imagine-video"],
-    textModels: ["default::gpt-5.5"],
-    audioModels: ["default::gpt-4o-mini-tts"],
+    models: ["openai::gpt-image-2", "grok::grok-imagine-video", "openai::gpt-5.5", "openai::gpt-4o-mini-tts"],
+    imageModels: ["openai::gpt-image-2"],
+    videoModels: ["grok::grok-imagine-video"],
+    textModels: ["openai::gpt-5.5"],
+    audioModels: ["openai::gpt-4o-mini-tts"],
     quality: "auto",
     size: "1:1",
     count: "1",
