@@ -5,6 +5,7 @@ description: 当前版本已实现但仍需人工验证的变更项
 
 # 待测试
 
+- Vite 本地代理：设置 `VITE_SUB2API_PROXY_TARGET` 后，将渠道 Base URL 配置为 `http://localhost:3000/sub2api`，需验证模型列表、图片生成和 Grok 视频请求均通过本地同源地址转发，且生产构建不依赖该代理。
 - Grok 视频生成：分别配置 OpenAI 格式和 Grok / xAI 格式的两条 Sub2API 渠道，使用各自分组 Key（Base URL 可相同，模型分别归属对应渠道）；选择 `grok-imagine-video` 或 `grok-imagine-video-1.5` 后，需验证文生视频、单图生视频、基础模型多图参考、任务轮询和生成结果本地保存；同时验证 OpenAI 模型仍使用 OpenAI 渠道 Key，1.5 多图参考、非单图 1080p 和多图超过 10 秒会显示明确提示。
 - 画布节点创建：鼠标左键双击画布空白区域会在点击位置打开节点选择菜单，可创建文本、图片、视频、音频、生成配置和组节点；双击已有节点或连线不应触发菜单。
 - 本地 Agent 连接说明：新增提醒说明只有安装 Codex 插件或手动添加 MCP 后才会增加 Codex token 消耗，直接运行 `npx -y @basketikun/canvas-agent` 不会安装 MCP；需验证文案位置清晰。

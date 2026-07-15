@@ -56,6 +56,8 @@ bun install
 bun run dev
 ```
 
+本地连接未开放 CORS 的 API 服务时，可复制 `web/.env.example` 为 `web/.env.local`，设置 `VITE_SUB2API_PROXY_TARGET`，再将页面里的 Base URL 填为 `http://localhost:3000/sub2api`。该代理只在 Vite 开发服务器中生效，不会进入生产构建。
+
 ### Docker 运行
 
 ```bash
