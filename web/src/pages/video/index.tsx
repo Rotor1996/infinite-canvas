@@ -13,6 +13,7 @@ import { canvasThemes } from "@/lib/canvas-theme";
 import { formatBytes, formatDuration } from "@/lib/image-utils";
 import { boolConfig, isSeedanceVideoConfig, normalizeSeedanceRatio, seedanceReferenceLabel, seedanceVideoReferenceError, seedanceVideoReferenceHint, SEEDANCE_REFERENCE_LIMITS } from "@/lib/seedance-video";
 import { isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoReferenceMode, normalizeGrokVideoResolution } from "@/lib/grok-video";
+import { proxiedMediaUrl } from "@/lib/media-proxy";
 import { deleteStoredMedia, resolveMediaUrl, uploadMediaFile } from "@/services/file-storage";
 import { resolveImageUrl, uploadImage } from "@/services/image-storage";
 import { createVideoGenerationTask, pollVideoGenerationTask, storeGeneratedVideo, type VideoGenerationTask } from "@/services/api/video";
@@ -702,11 +703,11 @@ async function readStoredLogs() {
 }
 
 async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog> {
-    const video = log.video?.storageKey ? { ...log.video, url: await resolveMediaUrl(log.video.storageKey, log.video.url) } : log.video;
+    const video = log.video?.storageKey ? { ...log.video, url: await resolveMediaUrl(log.video.storageKey, log.video.url) } : log.video ? { ...log.video, url: proxiedMediaUrl(log.video.url) } : log.video;
     const videoReferences = await Promise.all(
         (log.videoReferences || []).map(async (item) => ({
             ...item,
-            url: item.storageKey ? await resolveMediaUrl(item.storageKey, item.url) : item.url,
+            url: item.storageKey ? await resolveMediaUrl(item.storageKey, item.url) : proxiedMediaUrl(item.url),
         })),
     );
     const audioReferences = await Promise.all(

@@ -16,7 +16,18 @@ const store = localforage.createInstance({ name: "infinite-canvas", storeName: "
 const objectUrls = new Map<string, string>();
 
 export async function uploadImage(input: string | Blob): Promise<UploadedImage> {
-    const blob = typeof input === "string" ? await (await fetch(input)).blob() : input;
+    let blob: Blob;
+    if (typeof input === "string") {
+        try {
+            blob = await (await fetch(input)).blob();
+        } catch (error) {
+            if (!/^https?:\/\//i.test(input)) throw error;
+            const meta = await readImageMeta(input);
+            return { url: input, storageKey: "", width: meta.width, height: meta.height, bytes: 0, mimeType: meta.mimeType };
+        }
+    } else {
+        blob = input;
+    }
     const storageKey = `image:${nanoid()}`;
     await store.setItem(storageKey, blob);
     const url = URL.createObjectURL(blob);

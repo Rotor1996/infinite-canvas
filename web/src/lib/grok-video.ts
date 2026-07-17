@@ -41,7 +41,7 @@ export function normalizeGrokVideoRatio(value: string) {
     return grokVideoRatioOptions.reduce<string>((best, item) => (Math.abs(readRatio(item) - ratio) < Math.abs(readRatio(best) - ratio) ? item : best), grokVideoRatioOptions[0]);
 }
 
-export function normalizeGrokVideoReferenceMode(value: string | undefined) {
+export function normalizeGrokVideoReferenceMode(value: string | undefined): (typeof grokVideoReferenceModeOptions)[number] {
     return value === "extend" ? "extend" : "edit";
 }
 

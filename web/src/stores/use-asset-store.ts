@@ -3,6 +3,7 @@ import { persist, type PersistStorage, type StorageValue } from "zustand/middlew
 
 import { nanoid } from "nanoid";
 import { localForageStorage } from "@/lib/localforage-storage";
+import { proxiedMediaUrl } from "@/lib/media-proxy";
 import { cleanupUnusedImages, resolveImageUrl, uploadImage } from "@/services/image-storage";
 import { cleanupUnusedMedia, resolveMediaUrl } from "@/services/file-storage";
 
@@ -45,6 +46,7 @@ const assetStorage: PersistStorage<AssetStore> = {
         parsed.state.assets = await Promise.all(
             parsed.state.assets.map(async (asset) => {
                 if (asset.kind === "video" && asset.data.storageKey) return { ...asset, data: { ...asset.data, url: await resolveMediaUrl(asset.data.storageKey, asset.data.url) } };
+                if (asset.kind === "video") return { ...asset, data: { ...asset.data, url: proxiedMediaUrl(asset.data.url) } };
                 if (asset.kind !== "image") return asset;
                 if (asset.data.storageKey)
                     return {

@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { dataUrlToFile } from "@/lib/image-utils";
 import { isGrokVideo15Model, isGrokVideoConfig, normalizeGrokVideoDuration, normalizeGrokVideoRatio, normalizeGrokVideoReferenceMode, normalizeGrokVideoResolution } from "@/lib/grok-video";
+import { absoluteProxiedMediaUrl, proxiedMediaUrl } from "@/lib/media-proxy";
 import { getMediaBlob, uploadMediaFile, type UploadedFile } from "@/services/file-storage";
 import { imageToDataUrl } from "@/services/image-storage";
 import { boolConfig, buildSeedancePromptText, isSeedanceVideoConfig, normalizeSeedanceDuration, normalizeSeedanceRatio, normalizeSeedanceResolution, seedanceVideoReferenceError, SEEDANCE_REFERENCE_LIMITS } from "@/lib/seedance-video";
@@ -87,10 +88,12 @@ export async function pollVideoGenerationTask(config: AiConfig, task: VideoGener
 export async function storeGeneratedVideo(result: VideoGenerationResult): Promise<UploadedFile> {
     if (result.blob) return uploadMediaFile(result.blob, "video");
     if (result.url) {
+        const proxiedUrl = proxiedMediaUrl(result.url);
+        if (proxiedUrl !== result.url) return { url: proxiedUrl, storageKey: "", bytes: 0, mimeType: result.mimeType || "video/mp4" };
         try {
             return await uploadMediaFile(result.url, "video");
         } catch {
-            return { url: result.url, storageKey: "", bytes: 0, mimeType: result.mimeType || "video/mp4" };
+            return { url: proxiedUrl, storageKey: "", bytes: 0, mimeType: result.mimeType || "video/mp4" };
         }
     }
     throw new Error("视频接口没有返回可播放的视频");
@@ -297,7 +300,8 @@ async function resolveGrokImageUrl(image: ReferenceImage) {
 }
 
 async function resolveGrokVideoUrl(video: ReferenceVideo) {
-    if (isPublicMediaUrl(video.url)) return video.url;
+    const publicUrl = absoluteProxiedMediaUrl(video.url);
+    if (isPublicMediaUrl(publicUrl)) return publicUrl;
     let blob: Blob | null = null;
     if (video.storageKey) blob = await getMediaBlob(video.storageKey);
     if (!blob && video.url?.startsWith("blob:")) blob = await (await fetch(video.url)).blob();

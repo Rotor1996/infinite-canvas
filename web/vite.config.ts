@@ -26,16 +26,23 @@ export default defineConfig(({ mode }) => {
             __APP_VERSION__: JSON.stringify(localVersion),
             __APP_RELEASES__: JSON.stringify(parseChangelog(localChangelog)),
         },
-        server: sub2apiProxyTarget
-            ? {
-                  proxy: {
-                      "/sub2api": {
-                          target: sub2apiProxyTarget,
-                          changeOrigin: true,
-                          rewrite: (path) => path.replace(/^\/sub2api/, ""),
-                      },
-                  },
-              }
-            : undefined,
+        server: {
+            proxy: {
+                ...(sub2apiProxyTarget
+                    ? {
+                          "/sub2api": {
+                              target: sub2apiProxyTarget,
+                              changeOrigin: true,
+                              rewrite: (path: string) => path.replace(/^\/sub2api/, ""),
+                          },
+                      }
+                    : {}),
+                "/media-proxy/xai-vidgen-bucket": {
+                    target: "https://vidgen.x.ai",
+                    changeOrigin: true,
+                    rewrite: (path) => path.replace(/^\/media-proxy/, ""),
+                },
+            },
+        },
     };
 });
