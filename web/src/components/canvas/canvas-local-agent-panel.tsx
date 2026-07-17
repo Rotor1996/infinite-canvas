@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { App, Button, Input, Segmented, Tooltip } from "antd";
 import copyToClipboard from "copy-to-clipboard";
 import { Copy, FolderOpen, History, KeyRound, Link2, LoaderCircle, PlugZap, Plus, RefreshCw, Square, Terminal, Trash2 } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { randomId } from "@/lib/utils";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
-import { useAgentStore, type AgentAttachment, type AgentChatItem, type AgentEventLog, type AgentPanelTab, type AgentPendingToolCall, type AgentThreadSummary } from "@/stores/use-agent-store";
+import { useAgentStore, type AgentAttachment, type AgentCanvasContext, type AgentChatItem, type AgentEventLog, type AgentPanelTab, type AgentPendingToolCall, type AgentThreadSummary } from "@/stores/use-agent-store";
 import { summarizeCanvasAgentOps, type CanvasAgentOp, type CanvasAgentSnapshot } from "@/lib/canvas/canvas-agent-ops";
 import { isSiteTool, runSiteTool, SITE_TOOL_LABELS } from "@/lib/agent/agent-site-tools";
 import { AgentChatComposer, AgentChatMessage, AgentPanelTabs, AgentPendingToolCard, AgentWorkingMessage, type CanvasAgentChatAttachment } from "./canvas-agent-chat-ui";
@@ -46,9 +47,36 @@ export function CanvasLocalAgentPanel({ embedded, headless, autoConnect }: { emb
     const { message, modal } = App.useApp();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { width, url, token, connected, enabled, prompt, attachments, sending, waiting, messages, eventLogs, threads, activeThreadId, workspacePath, loadingThreads, activeTab, confirmTools, activity, connectError, pendingTool, canvasContext, setAgentState, addMessage: pushMessage, addEventLog: pushEventLog, clearEventLogs } = useAgentStore();
+    const { width, url, token, connected, enabled, prompt, attachments, sending, waiting, messages, eventLogs, threads, activeThreadId, workspacePath, loadingThreads, activeTab, confirmTools, activity, connectError, pendingTool } = useAgentStore(
+        useShallow((state) => ({
+            width: state.width,
+            url: state.url,
+            token: state.token,
+            connected: state.connected,
+            enabled: state.enabled,
+            prompt: state.prompt,
+            attachments: state.attachments,
+            sending: state.sending,
+            waiting: state.waiting,
+            messages: state.messages,
+            eventLogs: state.eventLogs,
+            threads: state.threads,
+            activeThreadId: state.activeThreadId,
+            workspacePath: state.workspacePath,
+            loadingThreads: state.loadingThreads,
+            activeTab: state.activeTab,
+            confirmTools: state.confirmTools,
+            activity: state.activity,
+            connectError: state.connectError,
+            pendingTool: state.pendingTool,
+        })),
+    );
+    const setAgentState = useAgentStore((state) => state.setAgentState);
+    const pushMessage = useAgentStore((state) => state.addMessage);
+    const pushEventLog = useAgentStore((state) => state.addEventLog);
+    const clearEventLogs = useAgentStore((state) => state.clearEventLogs);
     const listRef = useRef<HTMLDivElement>(null);
-    const canvasContextRef = useRef(canvasContext);
+    const canvasContextRef = useRef<AgentCanvasContext | null>(useAgentStore.getState().canvasContext);
     const confirmToolsRef = useRef(confirmTools);
     const pendingToolRef = useRef<AgentPendingToolCall | null>(null);
     const autoConnectRef = useRef(false);
@@ -82,8 +110,19 @@ export function CanvasLocalAgentPanel({ embedded, headless, autoConnect }: { emb
     }, [endpoint, setAgentState, token]);
 
     useEffect(() => {
-        canvasContextRef.current = canvasContext;
-    }, [canvasContext]);
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const unsubscribe = useAgentStore.subscribe((state) => {
+            if (state.canvasContext === canvasContextRef.current) return;
+            canvasContextRef.current = state.canvasContext;
+            if (!useAgentStore.getState().connected) return;
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => void postState(endpoint, token, clientIdRef.current, canvasContextRef.current?.snapshot || null), 300);
+        });
+        return () => {
+            unsubscribe();
+            if (timer) clearTimeout(timer);
+        };
+    }, [endpoint, token]);
     useEffect(() => {
         confirmToolsRef.current = confirmTools;
     }, [confirmTools]);
@@ -155,12 +194,6 @@ export function CanvasLocalAgentPanel({ embedded, headless, autoConnect }: { emb
     useEffect(() => {
         if (connected) void loadThreads();
     }, [connected, loadThreads]);
-
-    useEffect(() => {
-        if (!connected) return;
-        const timer = setTimeout(() => void postState(endpoint, token, clientIdRef.current, canvasContext?.snapshot || null), 300);
-        return () => clearTimeout(timer);
-    }, [canvasContext?.snapshot, connected, endpoint, token]);
 
     const sendPrompt = async () => {
         const text = prompt.trim();
