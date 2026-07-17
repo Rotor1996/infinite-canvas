@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { appName } from './shared';
+import { appName, docsBasePath } from './shared';
 import { ArrowUpRight } from 'lucide-react';
 
 const qqUrl = 'https://qm.qq.com/q/DFnKzZ807u';
@@ -9,7 +9,7 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <span className="inline-flex items-center gap-2 font-semibold">
-          <img src="/logo.svg" alt={appName} className="h-6 w-6" />
+          <img src={`${docsBasePath}/logo.svg`} alt={appName} className="h-6 w-6" />
           <span>{appName}</span>
         </span>
       ),
@@ -33,7 +33,7 @@ export function baseOptions(): BaseLayoutProps {
         url: qqUrl,
         external: true,
         on: 'menu',
-        icon: <img src="/qq.svg" alt="" className="size-4" />,
+        icon: <img src={`${docsBasePath}/qq.svg`} alt="" className="size-4" />,
       },
     ],
   };

@@ -4,4 +4,11 @@ services:
     container_name: infinite-canvas
     ports:
       - "3000:3000"
+    depends_on:
+      - docs
+    restart: unless-stopped
+
+  docs:
+    image: ghcr.io/basketikun/infinite-canvas-docs:latest
+    container_name: infinite-canvas-docs
     restart: unless-stopped

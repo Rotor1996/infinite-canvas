@@ -6,4 +6,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    depends_on:
+      - docs
+    restart: unless-stopped
+
+  docs:
+    image: infinite-canvas-docs:local
+    build:
+      context: .
+      dockerfile: docs/Dockerfile
     restart: unless-stopped
