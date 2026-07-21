@@ -5,6 +5,7 @@ description: 当前版本已实现但仍需人工验证的变更项
 
 # 待测试
 
+- Grok 视频相对内容地址：使用 Sub2API 渠道生成视频，任务完成返回 `/v1/videos/{request_id}/content` 时，前端应按该渠道 Base URL 请求内容并携带 API Key，视频随后可保存、播放和下载；公网签名视频地址仍不应附带渠道 API Key。
 - 本地 Agent 性能：连接本地 Agent 后持续拖拽节点、拖动节点边框缩放并缩放画布，页面不应出现 React 最大更新深度错误；Agent 面板消息、状态同步和画布工具调用仍应正常。
 - 分组节点：从画布创建菜单新建分组后，应自动打开节点设置面板，文本、音频节点仍保持原有创建交互。
 - Grok 参考视频：画布视频地址为 `/media-proxy/xai-vidgen-bucket/...` 时，点击“开始生成”应补全为当前站点的绝对公网 URL，并调用 `/v1/videos/edits` 或 `/v1/videos/extensions`，不再提示“Grok 参考视频读取失败”。

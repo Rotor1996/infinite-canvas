@@ -238,7 +238,7 @@ async function pollGrokVideoTask(config: AiConfig, task: VideoGenerationTask, op
     try {
         const state = unwrapEnvelope((await axios.get<ApiEnvelope<GrokVideoTask>>(aiApiUrl(config, `/videos/${encodeURIComponent(task.id)}`), { headers: aiHeaders(config), signal: options?.signal })).data, "Grok 视频接口没有返回任务状态");
         const url = state.video?.url;
-        if (state.status === "done" && url) return { status: "completed", result: await videoResultFromUrl(url, options) };
+        if (state.status === "done" && url) return { status: "completed", result: await videoResultFromUrl(url, options, config) };
         if (state.status === "done") return { status: "failed", error: "Grok 视频任务已完成，但没有返回 video.url" };
         if (state.status === "failed" || state.status === "expired") return { status: "failed", error: readApiErrorMessage(state.error) || `Grok 视频生成${state.status === "expired" ? "已过期" : "失败"}` };
         return { status: "pending" };
@@ -373,15 +373,31 @@ async function resolveSeedanceAudioUrl(audio: ReferenceAudio) {
     return blobToDataUrl(blob);
 }
 
-async function videoResultFromUrl(url: string, options?: RequestOptions): Promise<VideoGenerationResult> {
+async function videoResultFromUrl(url: string, options?: RequestOptions, apiConfig?: AiConfig): Promise<VideoGenerationResult> {
+    const request = videoResultRequest(url, apiConfig);
     try {
-        const response = await axios.get<Blob>(url, { responseType: "blob", signal: options?.signal });
+        const response = await axios.get<Blob>(request.url, { headers: request.headers, responseType: "blob", signal: options?.signal });
         await assertVideoBlob(response.data);
         return { blob: response.data };
     } catch (error) {
         if (axios.isCancel(error) || options?.signal?.aborted) throw error;
+        if (request.headers) throw error;
         return { url, mimeType: "video/mp4" };
     }
+}
+
+function videoResultRequest(url: string, config?: AiConfig) {
+    if (!config) return { url, headers: undefined };
+    if (!isPublicMediaUrl(url)) {
+        const path = url.trim().replace(/^\/?v1(?=\/|$)/i, "") || "/";
+        return { url: aiApiUrl(config, path.startsWith("/") ? path : `/${path}`), headers: aiHeaders(config) };
+    }
+    try {
+        if (new URL(url).origin === new URL(aiApiUrl(config, "/")).origin) return { url, headers: aiHeaders(config) };
+    } catch {
+        // Keep the existing public URL fallback when the configured base URL is non-standard.
+    }
+    return { url, headers: undefined };
 }
 
 function assertVideoConfig(config: AiConfig, model: string) {
