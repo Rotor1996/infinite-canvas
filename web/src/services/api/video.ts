@@ -216,11 +216,13 @@ async function createGrokVideoTask(config: AiConfig, model: string, prompt: stri
 }
 
 async function createGrokVideoReferenceTask(config: AiConfig, modelName: string, prompt: string, references: ReferenceImage[], videoReferences: ReferenceVideo[], model: string, options?: RequestOptions): Promise<VideoGenerationTask> {
+    const normalizedPrompt = prompt.trim();
+    if (!normalizedPrompt) throw new Error("请输入 Grok 视频编辑/延展提示词");
     if (references.length) throw new Error("Grok 参考视频模式不能同时使用参考图，请只保留视频输入");
     if (videoReferences.length > 1) throw new Error("Grok 视频编辑/延展一次只支持 1 个参考视频，请只保留一个视频输入");
     const mode = normalizeGrokVideoReferenceMode(config.videoReferenceMode);
     const videoUrl = await resolveGrokVideoUrl(videoReferences[0]);
-    const payload: Record<string, unknown> = { model: modelName, prompt, video: { url: videoUrl } };
+    const payload: Record<string, unknown> = { model: modelName, prompt: normalizedPrompt, video: { url: videoUrl } };
     const endpoint = mode === "extend" ? "/videos/extensions" : "/videos/edits";
     if (mode === "extend") payload.duration = normalizeGrokVideoDuration(config.videoSeconds);
 
