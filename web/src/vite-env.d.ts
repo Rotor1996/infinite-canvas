@@ -11,4 +11,8 @@ interface ImportMetaEnv {
     readonly VITE_ANALYTICS_GA4_ID?: string;
     // 百度统计站点 ID
     readonly VITE_ANALYTICS_BAIDU_ID?: string;
+    // 新用户和新增渠道使用的默认 API Base URL
+    readonly VITE_DEFAULT_API_BASE_URL?: string;
+    // 渠道配置中“获取 API Key”的引导地址
+    readonly VITE_API_KEY_GUIDE_URL?: string;
 }

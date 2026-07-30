@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 
+import { DEFAULT_API_BASE_URL } from "@/constant/runtime-config";
+
 export type ApiCallFormat = "openai" | "grok" | "gemini" | "ark";
 export type ModelCapability = "image" | "video" | "text" | "audio";
 export type ReasoningEffort = "auto" | "low" | "medium" | "high" | "xhigh";
@@ -63,21 +65,20 @@ export type ConfigTabKey = "channels" | "preferences" | "prompt-sources" | "webd
 
 export const CONFIG_STORE_KEY = "infinite-canvas:ai_config_store";
 const CHANNEL_MODEL_SEPARATOR = "::";
-const OPENAI_BASE_URL = "https://api.openai.com";
 const XAI_BASE_URL = "https://api.x.ai";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 const ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
 
 export const defaultConfig: AiConfig = {
     channelMode: "local",
-    baseUrl: OPENAI_BASE_URL,
+    baseUrl: DEFAULT_API_BASE_URL,
     apiKey: "",
     apiFormat: "openai",
     channels: [
         {
             id: "openai",
             name: "OpenAI",
-            baseUrl: OPENAI_BASE_URL,
+            baseUrl: DEFAULT_API_BASE_URL,
             apiKey: "",
             apiFormat: "openai",
             models: [
@@ -383,7 +384,7 @@ export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {
     if (apiFormat === "gemini") return GEMINI_BASE_URL;
     if (apiFormat === "grok") return XAI_BASE_URL;
     if (apiFormat === "ark") return ARK_BASE_URL;
-    return OPENAI_BASE_URL;
+    return DEFAULT_API_BASE_URL;
 }
 
 function normalizeApiFormat(apiFormat: unknown): ApiCallFormat {

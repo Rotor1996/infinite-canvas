@@ -2,6 +2,7 @@ import { Button, Drawer, Input, Segmented, Select, Space } from "antd";
 import { ListPlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { API_KEY_GUIDE_URL } from "@/constant/runtime-config";
 import { defaultBaseUrlForApiFormat, guessCapability, normalizeChannelModels, type ApiCallFormat, type ChannelModel, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
 import { ModelScriptEditor } from "./model-script-editor";
 import { ModelSelectModal } from "./model-select-modal";
@@ -87,6 +88,11 @@ export function ChannelEditorDrawer({ open, channel, onSave, onClose }: { open: 
                 <label className="block md:col-span-2">
                     <span className="mb-1 block text-sm font-medium">API Key</span>
                     <Input.Password value={draft.apiKey} onChange={(event) => patch({ apiKey: event.target.value })} placeholder="sk-..." />
+                    {API_KEY_GUIDE_URL ? (
+                        <a className="mt-1 inline-block text-xs" href={API_KEY_GUIDE_URL} target="_blank" rel="noreferrer">
+                            还没有 API Key？前往获取
+                        </a>
+                    ) : null}
                 </label>
             </div>
 

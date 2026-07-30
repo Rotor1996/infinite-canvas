@@ -7,8 +7,10 @@ services:
     depends_on:
       - docs
     restart: unless-stopped
-    # 统计分析（可选，默认关闭）。每家一个独立变量，填了谁就启用谁，可同时启用多家：
+    # 默认渠道与统计分析均可通过运行时环境变量配置，无需重新构建镜像：
     # environment:
+    #   DEFAULT_API_BASE_URL: https://ai.rotor1996.top/v1
+    #   API_KEY_GUIDE_URL: https://ai.rotor1996.top/
     #   ANALYTICS_GA4_ID: G-XXXXXXXXXX                    # Google Analytics 4 衡量 ID
     #   ANALYTICS_BAIDU_ID: xxxxxxxxxxxxxxxxxxxxxxxxxxxx   # 百度统计站点 ID
 

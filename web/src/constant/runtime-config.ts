@@ -8,6 +8,8 @@
 type RuntimeConfig = {
     ANALYTICS_GA4_ID?: string; // GA4 衡量 ID（G-XXXX）
     ANALYTICS_BAIDU_ID?: string; // 百度统计站点 ID
+    DEFAULT_API_BASE_URL?: string; // 新用户和新增渠道使用的默认 API Base URL
+    API_KEY_GUIDE_URL?: string; // 渠道配置中“获取 API Key”的引导地址
 };
 
 declare global {
@@ -27,3 +29,5 @@ function read(key: keyof RuntimeConfig, buildTime: string | undefined, fallback 
 
 export const ANALYTICS_GA4_ID = read("ANALYTICS_GA4_ID", import.meta.env.VITE_ANALYTICS_GA4_ID);
 export const ANALYTICS_BAIDU_ID = read("ANALYTICS_BAIDU_ID", import.meta.env.VITE_ANALYTICS_BAIDU_ID);
+export const DEFAULT_API_BASE_URL = read("DEFAULT_API_BASE_URL", import.meta.env.VITE_DEFAULT_API_BASE_URL, "https://ai.rotor1996.top/v1").replace(/\/+$/, "");
+export const API_KEY_GUIDE_URL = read("API_KEY_GUIDE_URL", import.meta.env.VITE_API_KEY_GUIDE_URL, "https://ai.rotor1996.top/");
